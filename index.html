@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Carousel</title>
+    <link rel="icon" sizes="192x192" href="/round.png">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f3f3dd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .carousel {
+            position: relative;
+            width: 300px;
+            height: 230px;
+            perspective: 1000px;
+        }
+        .carousel-inner {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            animation: spin 30s infinite linear;
+            transition: transform 0.5s;
+            transform: rotateX(-10deg); /* Tilt the carousel to the left */
+        }
+        .carousel-inner:hover {
+            animation-play-state: paused;
+        }
+        .carousel-item {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            backface-visibility: hidden;
+        }
+        .carousel-item video {
+            width: 100%;
+            height: 100%; /* Ensure the video fills the item */
+            border-radius: 20%;
+            object-fit: cover; /* Cover the entire area */
+        }
+        @keyframes spin {
+            from {
+                transform: rotateY(0deg);
+            }
+            to {
+                transform: rotateY(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="carousel" id="carousel">
+    <div class="carousel-inner" id="carousel-inner"></div>
+</div>
+
+<script>
+    const carouselInner = document.getElementById('carousel-inner');
+    const videos = [
+        'images/smile.mp4',
+        'images/smile.mp4',
+        'images/smile.mp4',
+        'images/smile.mp4',
+        // these need to be videos
+        // 'images/01.png', 
+        // 'images/02.png',
+        // 'images/03.png',
+        // 'images/04.png',
+        // 'images/05.png',
+        // 'images/06.png',
+        // 'images/07.png',
+        // Add more video paths as needed
+    ];
+
+    function createCarouselItems() {
+        const totalVideos = videos.length;
+        const angle = 360 / totalVideos;
+        const radius = 200; // Adjust this value to change the distance from the center
+
+        videos.forEach((src, index) => {
+            const item = document.createElement('div');
+            item.className = 'carousel-item';
+            item.style.transform = `rotateY(${index * angle}deg) translateZ(${radius}px)`;
+            const video = document.createElement('video');
+            video.src = src;
+            video.autoplay = true; // Auto-start the video
+            video.loop = true; // Loop the video
+            video.controls = true; // Add controls for play, pause, and volume
+            video.muted = true;
+            item.appendChild(video);
+            carouselInner.appendChild(item);
+        });
+    }
+
+    createCarouselItems();
+</script>
+
+</body>
+</html>

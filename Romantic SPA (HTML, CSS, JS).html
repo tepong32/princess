@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Romantic Photo Carousel</title>
+    <link rel="icon" sizes="192x192" href="/round.png">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fde8e8; /* Light pink background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Use min-height for mobile */
+            overflow: hidden;
+            flex-direction: column; /* Default to column for mobile */
+        }
+
+        .carousel-container {
+            position: relative;
+            width: 80%; /* Adjust width for mobile */
+            max-width: 600px; /* Maximum width for larger mobile screens */
+            height: 400px; /* Adjust height for mobile */
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); /* Added shadow */
+            border-radius: 10px; /* Optional: Add border-radius to the container for a softer look with the shadow */
+        }
+
+        .carousel {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            perspective: 1200px;
+        }
+
+        .carousel-inner {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            animation: spin 30s infinite linear;
+            transition: transform 0.5s;
+            transform: rotateX(-10deg);
+        }
+
+        .carousel-inner:hover {
+            animation-play-state: paused;
+        }
+
+        .carousel-item {
+            position: absolute;
+            width: 45%; /* Reduced width to prevent overlap */
+            height: 50%;
+            left: 27.5%; /* Adjusted left position to center (50% - 45%/2) */
+            top: 25%; /* Adjusted top position to center (50% - 50%/2) */
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            backface-visibility: hidden;
+            overflow: hidden;
+            opacity: 0.8; /* Slightly reduce opacity for non-active slides */
+            transition: opacity 0.3s, filter 0.3s; /* Added transition for filter */
+            filter: blur(5px); /* Added blur effect to inactive slides */
+        }
+
+        .carousel-item.active {
+            opacity: 1; /* Make the active slide fully opaque */
+            filter: none; /* Remove blur from the active slide */
+        }
+
+        .carousel-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotateY(0deg);
+            }
+            to {
+                transform: rotateY(360deg);
+            }
+        }
+
+        .heart {
+            position: absolute;
+            font-size: 20px;
+            color: red;
+            animation: float 1s linear infinite;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-100px); opacity: 0; }
+        }
+
+        .text-card {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 80%; /* Adjust width for mobile */
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        .text-card h3 {
+            margin-top: 0;
+            color: #e91e63;
+        }
+
+        .text-card p {
+            color: #555;
+        }
+
+        /* Media query for larger screens */
+        @media (min-width: 992px) {
+            body {
+                flex-direction: row; /* Arrange items in a row on larger screens */
+                justify-content: space-around; /* Space out carousel and text */
+                align-items: center;
+            }
+
+            .carousel-container {
+                width: 40%;
+                max-width: none; /* Remove max-width */
+                height: 60vh; /* Adjust height for larger screens */
+                margin-bottom: 0;
+            }
+
+            .text-card {
+                width: 50%;
+                max-width: none; /* Remove max-width */
+                margin-bottom: 0;
+                text-align: left; /* Align text to the left on larger screens */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="carousel-container" id="carousel-container">
+    <div class="carousel" id="carousel">
+        <div class="carousel-inner" id="carousel-inner"></div>
+    </div>
+</div>
+
+<div class="text-card" id="text-card">
+    <h3 id="image-title"></h3>
+    <p id="image-description"></p>
+</div>
+
+<script>
+    const carouselInner = document.getElementById('carousel-inner');
+    const carouselContainer = document.getElementById('carousel-container');
+    const textCardTitle = document.getElementById('image-title');
+    const textCardDescription = document.getElementById('image-description');
+    const images = [
+        { src: 'assets/phat_05.png', title: 'Sunset Kiss', description: 'A tender kiss at sunset.' },
+        { src: 'assets/02.jpg', title: 'Heart Balloons', description: 'Releasing heart-shaped balloons.' },
+        { src: 'assets/03.jpg', title: 'Beach Walk', description: 'A romantic walk on the beach.' },
+        { src: 'assets/04.jpg', title: 'Candlelit Dinner', description: 'Enjoying a cozy candlelit dinner.' },
+        { src: 'assets/05.jpg', title: 'Love Letter', description: 'Writing a heartfelt love letter.' },
+        { src: 'assets/06.jpg', title: 'Stargazing', description: 'Sharing a quiet moment under the stars.' },
+        // Add more image paths and descriptions if you want a 6-sided carousel
+    ];
+
+    let currentIndex = 0;
+    const numberOfSides = 6; // Change this to 6 for a 6-sided carousel
+
+    function createCarouselItems() {
+        const totalImages = images.length;
+        const angle = 360 / numberOfSides; // Adjust angle for 6 sides
+        const radius = 300; // Increased radius for more spacing
+
+        // If there are fewer images than sides, we'll adjust the total items
+        const totalItems = Math.max(totalImages, numberOfSides);
+        const imageAngleIncrement = 360 / totalItems;
+
+        for (let i = 0; i < totalItems; i++) {
+            const item = document.createElement('div');
+            item.className = 'carousel-item';
+            item.style.transform = `rotateY(${i * angle}deg) translateZ(${radius}px)`;
+
+            if (i < totalImages) {
+                const image = images[i];
+                const img = document.createElement('img');
+                img.src = image.src;
+                img.alt = image.title;
+                item.appendChild(img);
+                item.dataset.index = i; // Store the original image index
+            } else {
+                // If we have more sides than images, you can leave these sides blank or add a placeholder
+                item.style.background = 'transparent'; // Make empty sides transparent
+                item.style.boxShadow = 'none';
+            }
+
+            carouselInner.appendChild(item);
+        }
+
+        // Set the initial active class and text (for the first image if available)
+        setActiveSlide(0);
+    }
+
+    function setActiveSlide(index) {
+        document.querySelectorAll('.carousel-item').forEach(item => {
+            item.classList.remove('active');
+        });
+
+        const activeItemIndex = index % images.length; // Ensure index is within the bounds of images
+        const targetRotation = -currentIndex * (360 / numberOfSides);
+
+        carouselInner.querySelectorAll('.carousel-item').forEach(item => {
+            const rotationY = parseFloat(item.style.transform.split('rotateY(')[1].split('deg)')[0]);
+            const normalizedRotationY = (rotationY % 360 + 360) % 360;
+            const targetNormalizedRotation = (targetRotation % 360 + 360) % 360;
+
+            if (Math.abs(normalizedRotationY - targetNormalizedRotation) < 1) {
+                item.classList.add('active');
+                const dataIndex = parseInt(item.dataset.index);
+                if (!isNaN(dataIndex) && dataIndex < images.length) {
+                    updateTextCard(dataIndex);
+                }
+            }
+        });
+    }
+
+    function updateTextCard(index) {
+        if (images.length > 0) {
+            textCardTitle.textContent = images[index].title;
+            textCardDescription.textContent = images[index].description;
+        } else {
+            textCardTitle.textContent = '';
+            textCardDescription.textContent = '';
+        }
+    }
+
+    function createHeart(x, y) {
+        const heart = document.createElement('div');
+        heart.className = 'heart';
+        heart.innerHTML = '❤️';
+        heart.style.left = `${x}px`;
+        heart.style.top = `${y}px`;
+        carouselContainer.appendChild(heart);
+
+        setTimeout(() => {
+            heart.remove();
+        }, 1000);
+    }
+
+    carouselContainer.addEventListener('click', (e) => {
+        const x = e.clientX - carouselContainer.getBoundingClientRect().left;
+        const y = e.clientY - carouselContainer.getBoundingClientRect().top;
+        createHeart(x, y);
+    });
+
+    // Basic auto-rotation
+    setInterval(() => {
+        currentIndex = (currentIndex + 1) % numberOfSides; // Rotate through the sides
+        setActiveSlide(currentIndex);
+        const angleIncrement = 360 / numberOfSides;
+        carouselInner.style.transform = `rotateX(-10deg) rotateY(-${currentIndex * angleIncrement}deg)`;
+    }, 5000); // Change slide every 5 seconds
+
+    createCarouselItems();
+</script>
+
+</body>
+</html>
